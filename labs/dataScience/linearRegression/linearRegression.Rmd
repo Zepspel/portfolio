@@ -1,0 +1,195 @@
+---
+title: "lab4"
+author: "Шацких П.О."
+date: "2025-11-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Linear Regression
+
+## Gather and Prepare Data
+
+```{r}
+dframe <- read.csv("https://hyper.mephi.ru/assets/courseware/v1/36b8d9e2f04765276b91998c79d4a607/asset-v1:MEPhIx+CS712DS+2025Fall+type@asset+block/zeta.csv",
+                     fill=TRUE)
+
+
+summary(dframe)
+head(dframe)
+length(dframe)
+nrow(dframe)
+
+dframe$sex <- factor(dframe$sex)
+
+dframe <- dframe[dframe$sex == "F",]
+
+
+dframe <- dframe[, -c(1, 2, 3)]
+
+
+dframe <- dframe[dframe$meaneducation > 8 & dframe$meaneducation < 18, ]
+dframe <- dframe[dframe$meanemployment > 0 & dframe$meanemployment < 3, ]
+dframe <- dframe[dframe$meanhouseholdincome > 10000 & dframe$meanhouseholdincome < 200000, ]
+dframe <- dframe[dframe$meanage > 20 & dframe$meanage < 60, ]
+#dframe <- subset(dframe, meaneducation > 8 & meaneducation < 18)
+
+
+dframe$log_income <- log10(dframe$meanhouseholdincome)
+
+names(dframe)[c(1,2,3)] <- c("age", "education", "employment")
+
+head(dframe)
+summary(dframe)
+```
+
+
+
+## a. We will be analyzing this data with income as the dependent variable and the other columns as independent variables.  Create a scatter plot showing the effect age has on log_income and paste it here.  Do you see any linear relationship between the two variables?
+
+```{r}
+library(ggplot2)
+
+ggplot(dframe, aes(x = age, y = log_income)) +
+  geom_point(alpha = 0.1, size = 2) +
+  labs(title = "age vs log_income",
+       x = "Age",
+       y = "Log_income")
+```
+
+
+
+## b. Create a linear regression model between log_income and age.  What is the interpretation of the t-value? What kind of t-value would indicate a significant coefficient?
+```{r}
+model <- lm(log_income ~ age, data = dframe)
+summary(model)
+```
+t-value - показывает, насколько оцененный коэффициент отличается от нуля в единицах стандартной ошибки.
+
+t-value = Коэффициент / Стандартная ошибка коэффициента
+
+Большой абсолютный t-value (далекий от 0) → высокая вероятность, что коэффициент статистически значим
+
+Малый абсолютный t-value (близкий к 0) → коэффициент может не отличаться от нуля
+
+
+coefficient = -0.0030739
+std_error = 0.0001584
+
+t_value = (-0.0030739 - 0) / 0.0001584 = -19.4
+
+
+## What is the interpretation of the R-squared value?  What kind of R-squared value would indicate a good fit?
+
+R² показывает, насколько модель лучше, чем простое предсказание средним значением
+
+R² = 1 - SSerr / SStot
+
+SSerr = Σ(y - y_pred)² — сумма квадратов ошибок (необъясненная моделью изменчивость)  
+SStot = Σ(y - mean(y))² — общая сумма квадратов (общая изменчивость данных)
+
+Примеры значений R²  
+R² = 1 — идеальная модель (все точки лежат на линии)  
+R² = 0.8 — модель объясняет 80% изменчивости данных  
+R² = 0 — модель не лучше, чем просто предсказывать среднее значение  
+R² < 0 — модель работает хуже, чем предсказание средним
+
+
+Adjusted R-squared
+
+R^2 = 1 - (1 - R^2) * (n - 1)/(n - p -1)
+
+Показывает:  
+Долю объясненной дисперсии с поправкой на число предикторов  
+Может уменьшаться при добавлении бесполезных переменных
+
+
+## d. What is the interpretation of the F-statistic?  What kind of F-statistic indicates a strong linear regression model?
+
+F-статистика проверяет общую значимость модели - то есть, проверяет, имеет ли модель вообще какую-либо предсказательную силу.
+
+F = (SS_model / p) / (SS_err / (n - p - 1))  
+SS_model = sum((y_pred - mean(y))^2)  
+SS_err = sum((y - y_pred)^2)  
+k = количество предикторов (независимых переменных)
+n = количество наблюдений (строк)
+
+F = (R²/p) / [(1-R²)/(n-p-1)]
+
+Интерпретация F-статистики  
+F < 1:    Модель хуже нулевой модели  
+F = 1-3:  Слабая модель  
+F = 4-10: Хорошая модель  
+F > 10:   Отличная модель  
+F > 100:  Выдающаяся модель  
+
+
+
+# p-value (значение p) 
+это вероятность получить такие же или более крайние результаты, при условии что нулевая гипотеза верна  
+Нулевая гипотеза (H₀): Все коэффициенты модели (кроме intercept) равны 0  
+
+
+Формула расчета p-value для F-статистики:
+
+Для F-теста в регрессии:
+
+p = P(F > F_observed | H0)
+
+p = 1 - F_CDF(F_observed, df1, df2)  
+F_CDF - функция распределения F статистики
+
+# f. Create a scatter plot showing the effect education has on log_income. Do you see any linear relationship between the two variables?
+
+```{r}
+ggplot(dframe, aes(x = education, y = log_income)) +
+  geom_point(alpha = 0.1, size = 2) +
+  labs(title = "Education vs log_income",
+       x = "Education",
+       y = "Log_income")
+```
+
+##  Analyze a detailed summary of a linear regression model between log_income and education.  What is the R-squared value?  Is the model a good fit?  Is it better than the previous model?
+```{r}
+model <- lm(log_income ~ education, data = dframe)
+summary(model)
+```
+
+## h. Analyze a detailed summary of a linear regression model between the dependent variable log_income, and the independent variables age, education, and employment.  Is this model a good fit? Why?  What conclusions can be made about the different independent variables?
+```{r}
+model <- lm(log_income ~ age + education + employment, data = dframe)
+summary(model)
+```
+
+p = 1 - F_CDF(F_observed, df1, df2)  
+p = 1 - F_CDF(13870, 3, 31425)
+
+## j. Create a graph that contains a y = x line and uses the multiple regression model to plot the predicted data points against the actual data points of the training set. 
+
+
+```{r}
+ggplot(dframe, aes(x = log_income, y = predict(model))) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linewidth = 1) +
+  labs(title = "Predicted vs Actual",
+       x = "Actual log_income",
+       y = "Predicted log_income") +
+  coord_fixed(ratio = 1)
+```
+
+In the graph, for lower incomes our model seems to over predict the income  
+For higher incomes, our model seems to slightly under predict the income  
+This graph indicates that our model provides reliable predictions around the median income range  
+
+
+
+
+
+
+
+
+
+

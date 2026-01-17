@@ -1,0 +1,78 @@
+insertion 10 elements in tree with size 100: 0.001393 s
+insertion 10 elements in tree with size 200: 0.000141 s
+insertion 10 elements in tree with size 400: 0.000115 s
+insertion 10 elements in tree with size 800: 0.000122 s
+insertion 10 elements in tree with size 1600: 0.000125 s
+insertion 10 elements in tree with size 3200: 0.000129 s
+insertion 10 elements in tree with size 6400: 0.000131 s
+insertion 10 elements in tree with size 12800: 0.000124 s
+insertion 10 elements in tree with size 25600: 0.000134 s
+insertion 10 elements in tree with size 51200: 0.000149 s
+insertion 10 elements in tree with size 102400: 0.000192 s
+insertion 10 elements in tree with size 204800: 0.000146 s
+insertion 10 elements in tree with size 409600: 0.000141 s
+insertion 10 elements in tree with size 819200: 0.000253 s
+
+
+deletion 10 elements in tree with size 100: 0.001141 s
+deletion 10 elements in tree with size 200: 0.000043 s
+deletion 10 elements in tree with size 400: 0.000049 s
+deletion 10 elements in tree with size 800: 0.000049 s
+deletion 10 elements in tree with size 1600: 0.000045 s
+deletion 10 elements in tree with size 3200: 0.000062 s
+deletion 10 elements in tree with size 6400: 0.000073 s
+deletion 10 elements in tree with size 12800: 0.000061 s
+deletion 10 elements in tree with size 25600: 0.000081 s
+deletion 10 elements in tree with size 51200: 0.000088 s
+deletion 10 elements in tree with size 102400: 0.000098 s
+deletion 10 elements in tree with size 204800: 0.000110 s
+deletion 10 elements in tree with size 409600: 0.000111 s
+deletion 10 elements in tree with size 819200: 0.000188 s
+
+
+searching 10 elements in tree with size 100: 0.000592 s
+searching 10 elements in tree with size 200: 0.000052 s
+searching 10 elements in tree with size 400: 0.000050 s
+searching 10 elements in tree with size 800: 0.000063 s
+searching 10 elements in tree with size 1600: 0.000048 s
+searching 10 elements in tree with size 3200: 0.000055 s
+searching 10 elements in tree with size 6400: 0.000075 s
+searching 10 elements in tree with size 12800: 0.000070 s
+searching 10 elements in tree with size 25600: 0.000085 s
+searching 10 elements in tree with size 51200: 0.000090 s
+searching 10 elements in tree with size 102400: 0.000103 s
+searching 10 elements in tree with size 204800: 0.000102 s
+searching 10 elements in tree with size 409600: 0.000116 s
+searching 10 elements in tree with size 819200: 0.000110 s
+
+
+searching maximum 10 times in tree with size 100: 0.001638 s
+searching maximum 10 times in tree with size 200: 0.000073 s
+searching maximum 10 times in tree with size 400: 0.000078 s
+searching maximum 10 times in tree with size 800: 0.000077 s
+searching maximum 10 times in tree with size 1600: 0.000074 s
+searching maximum 10 times in tree with size 3200: 0.000076 s
+searching maximum 10 times in tree with size 6400: 0.000071 s
+searching maximum 10 times in tree with size 12800: 0.000069 s
+searching maximum 10 times in tree with size 25600: 0.000076 s
+searching maximum 10 times in tree with size 51200: 0.000073 s
+searching maximum 10 times in tree with size 102400: 0.000076 s
+searching maximum 10 times in tree with size 204800: 0.000072 s
+searching maximum 10 times in tree with size 409600: 0.000076 s
+searching maximum 10 times in tree with size 819200: 0.000076 s
+
+
+traversial 100 elements: 0.000313 s
+traversial 200 elements: 0.000011 s
+traversial 400 elements: 0.000017 s
+traversial 800 elements: 0.000044 s
+traversial 1600 elements: 0.000294 s
+traversial 3200 elements: 0.000354 s
+traversial 6400 elements: 0.000955 s
+traversial 12800 elements: 0.002200 s
+traversial 25600 elements: 0.004587 s
+traversial 51200 elements: 0.008324 s
+traversial 102400 elements: 0.017823 s
+traversial 204800 elements: 0.034101 s
+traversial 409600 elements: 0.069383 s
+traversial 819200 elements: 0.136094 s

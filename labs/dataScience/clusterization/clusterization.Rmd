@@ -1,0 +1,460 @@
+---
+title: "clusterization"
+author: "Шацких П.О."
+date: "2025-11-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## Creating data frame with 3 columns
+```{r simple k-means}
+
+load("income_elec_state.RData")
+
+dframe <- data.frame(state = rownames(income_elec_state),
+                 mean_household_income = income_elec_state$income,
+                 mean_electricity_usage = income_elec_state$elec)
+```
+
+
+
+## Brief look on the data
+```{r}
+plot(dframe$mean_household_income, dframe$mean_electricity_usage,
+     main="scatter plot",
+     xlab="income",
+     ylab="elec usage")
+
+boxplot(dframe$mean_household_income, 
+        main="BOXPLOT",
+        ylab="Income")
+
+boxplot(dframe$mean_electricity_usage, 
+        main="BOXPLOT",
+        ylab="elec usage")
+summary(dframe)
+```
+
+
+
+
+## Simple k-means with k = 10
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 10, nstart = 1)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация",
+     xlab = "income",
+     ylab = "electricity usage")
+#add centroids
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+```
+
+
+one more attempt
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 10, nstart = 1)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация",
+     xlab = "income",
+     ylab = "electricity usage")
+#add centroids
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+```
+
+
+
+## Prevent changes
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 10, nstart = 25)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация",
+     xlab = "income",
+     ylab = "electricity usage")
+#add centroids
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+```
+
+
+confirmation
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 10, nstart = 25)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация",
+     xlab = "income",
+     ylab = "electricity usage")
+#add centroids
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+```
+
+
+
+
+# Determine a reasonable value of k
+
+create elbow plot
+```{r}
+wss <- sapply(1:10, function(k) {
+  kmeans(dframe[,2:3], centers = k, nstart = 25)$tot.withinss
+})
+
+plot(wss, type = "b", frame = FALSE,
+     xlab = "Number of clusters K",
+     ylab = "Within-clusters sum of squares",
+     main = "Elbow Method")
+```
+
+
+##  K-means with k = 4
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 4, nstart = 25)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация",
+     xlab = "income",
+     ylab = "electricity usage")
+#add centroids
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+```
+
+
+## Log scale of axis
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 4, nstart = 25)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация log scale axises",
+     xlab = "income",
+     ylab = "electricity usage",
+     log="xy")
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+```
+
+# Log scale of data
+k have to be more then 4 to underline outlier
+```{r}
+df_log <- data.frame(
+  log_income = log10(dframe$mean_household_income),
+  log_electricity = log10(dframe$mean_electricity_usage)
+)
+kmeans_result <- kmeans(df_log, centers = 5)
+
+plot(df_log, col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация log scale data, k = 5",
+     xlab = "log income",
+     ylab = "log electricity usage",
+     log="xy")
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+
+```
+
+create elbow plot for log data
+```{r}
+wss <- sapply(1:10, function(k) {
+  kmeans(df_log, centers = k, nstart = 25)$tot.withinss
+})
+
+plot(wss, type = "b", frame = FALSE,
+     xlab = "Number of clusters K",
+     ylab = "Within-clusters sum of squares",
+     main = "Elbow Method for log data")
+```
+
+
+```{r include = FALSE}
+library(dplyr)
+```
+
+
+# Remove outlier
+```{r}
+dframe <- filter(dframe, mean_household_income>30000)
+summary(dframe)
+```
+
+new elbow plot
+```{r}
+wss <- sapply(1:10, function(k) {
+  kmeans(dframe[,2:3], centers = k, nstart = 25)$tot.withinss
+})
+
+plot(wss, type = "b", frame = FALSE,
+     xlab = "Number of clusters K",
+     ylab = "Within-clusters sum of squares",
+     main = "Elbow Method")
+```
+
+
+## Reevaluate choice of k
+k = 4
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 4, nstart = 25)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация",
+     xlab = "income",
+     ylab = "electricity usage")
+#add centroids
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+```
+
+
+k = 2
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 2, nstart = 25)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация",
+     xlab = "income",
+     ylab = "electricity usage")
+#add centroids
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+```
+
+
+# Color a map of the U.S. task
+```{r include=FALSE}
+library(maps)
+library(ggplot2)
+```
+
+# Добавляем в датафрейм колонку кластеров
+```{r}
+dframe$cluster <- kmeans_result$cluster
+head(dframe)
+```
+
+# Загружаем карту штатов
+```{r}
+states_map <- map_data("state")
+head(states_map)
+```
+
+# Создаем таблицу соответствия названий штатов
+```{r}
+state_lookup <- data.frame(
+state_abb = state.abb,
+state_name = tolower(state.name)
+)
+
+head(state_lookup)
+```
+
+Добавляем Вашингтон (округ Колумбия)
+```{r}
+state_lookup <- rbind(state_lookup, 
+                      data.frame(state_abb = "DC", 
+                      state_name = "district of columbia"))
+```
+
+# Объединяем с нашими данными в одну таблицу
+```{r}
+names(dframe)[1] <- "state_abb"
+head(dframe)
+mapped_data <- merge(state_lookup, dframe, by = "state_abb", all.x = TRUE)
+head(mapped_data)
+```
+
+
+# Объединяем с картой
+```{r}
+final_map <- merge(states_map, mapped_data, 
+                    by.x = "region", by.y = "state_name", all.x = TRUE)
+
+head(final_map)
+```
+
+
+# Рисуем карту
+```{r}
+
+cluster_colors <- c("1" = "red", "2" = "blue", "3" = "green")
+
+ggplot(final_map, 
+       aes(x = long, y = lat, group = group, fill = as.factor(cluster))) +
+        geom_polygon(color = "white", size = 0.2) +
+        scale_fill_manual(
+    name = "Кластер",
+    values = cluster_colors,
+    labels = c("1", "2", "3")
+  )
+
+```
+
+
+для наглядности
+```{r}
+kmeans_result <- kmeans(dframe[,2:3], centers = 3, nstart = 25)
+
+plot(dframe[,2:3], col = kmeans_result$cluster,  pch = 19,
+     main = "K-means кластеризация",
+     xlab = "income",
+     ylab = "electricity usage")
+points(kmeans_result$centers, col = 1:4, pch = 18, cex = 2)
+# Добавляем номера только к центроидам
+text(kmeans_result$centers[,1], kmeans_result$centers[,2], 
+     labels = 1:3, pos = 3, cex = 1.2, font = 2)
+```
+
+для наглядности
+```{r include=FALSE}
+library(patchwork)  # для компоновки графиков
+```
+Фиксируем цвета для кластеров
+```{r}
+cluster_colors <- c("1" = "red", "2" = "blue", "3" = "green")
+cluster_labels <- c("1" = "Кластер 1", "2" = "Кластер 2", "3" = "Кластер 3")
+```
+
+
+```{r}
+# Убедимся что кластеры пронумерованы от 1 до 3
+final_map$cluster <- as.factor(final_map$cluster)
+
+
+# График 1: Карта США
+p1 <- ggplot(final_map, 
+       aes(x = long, y = lat, group = group, fill = cluster)) +
+  geom_polygon(color = "white", size = 0.2) +
+  scale_fill_manual(
+    name = "Кластер",
+    values = cluster_colors,
+    labels = cluster_labels
+  ) 
+  labs(title = "Карта кластеров по штатам") +
+  theme(legend.position = "bottom")
+
+# График 2: Исходный scatter plot k-means
+p2 <- ggplot(dframe, 
+       aes(x = mean_household_income, 
+           y = mean_electricity_usage,
+           color = as.factor(cluster))) +
+  geom_point(size = 3) +
+  scale_color_manual(
+    name = "Кластер",
+    values = cluster_colors,
+    labels = cluster_labels
+  ) +
+  labs(title = "K-means кластеризация",
+       x = "Доход домохозяйства",
+       y = "Потребление электроэнергии") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+# Компонуем графики рядом
+p1
+p2
+```
+
+
+
+
+# Task 4.1b
+
+Все методы используют общий подход:
+1. Начинаем с n кластеров (каждый объект - отдельный кластер)
+2. На каждом шаге объединяем два ближайших кластера
+3. Повторяем до тех пор, пока не останется один кластер
+
+Разница между методами в том, как они вычисляют "расстояние между кластерами"
+
+
+
+calculate distanations
+```{r}
+dist_matrix <- dist(dframe[,2:3])
+head(dist_matrix)
+```
+
+
+# Mинимизирует дисперсию внутри кластеров
+Создает компактные, сферические кластеры примерно одинакового размера
+```{r}
+hc <- hclust(dist_matrix, method = "ward.D2")
+
+plot(hc, cex=0.3, main = "Дендрограмма иерархической кластеризации ward",
+     xlab = "Объекты", ylab = "Расстояние")
+
+rect.hclust(hc, k = 4, border = "green")
+```
+
+
+# Расстояние между кластерами = максимальное расстояние между их объектами
+Устойчив к выбросам
+```{r}
+hc <- hclust(dist_matrix, method = "complete")
+
+plot(hc, labels=FALSE, main = "Дендрограмма иерархической кластеризации complete",
+     xlab = "Объекты", ylab = "Расстояние")
+
+rect.hclust(hc, k = 4, border = "green")
+```
+
+
+
+# Расстояние между кластерами = среднее всех попарных расстояний
+Баланс между complete и single linkage
+```{r}
+hc <- hclust(dist_matrix, method = "average")
+
+plot(hc, labels=FALSE, main = "Дендрограмма иерархической кластеризации average",
+     xlab = "Объекты", ylab = "Расстояние")
+
+rect.hclust(hc, k = 4, border = "green")
+```
+
+
+
+# Расстояние между кластерами = минимальное расстояние между их объектами
+Склонен к созданию вытянутых "цепочных" кластеров (chaining effect)
+Чувствителен к шуму и выбросам
+```{r}
+hc <- hclust(dist_matrix, method = "single")
+
+plot(hc, labels=FALSE, main = "Дендрограмма иерархической кластеризации single",
+     xlab = "Объекты", ylab = "Расстояние")
+
+rect.hclust(hc, k = 4, border = "green")
+```
+
+
+
+# Расстояние между кластерами = расстояние между их центроидами
+Может создавать инверсии в дендрограмме
+Когда объединяются два больших кластера, их новый центроид может оказаться БЛИЖЕ к третьему кластеру, чем центроиды исходных кластеров.
+```{r}
+hc <- hclust(dist_matrix, method = "centroid")
+
+plot(hc, labels=FALSE, main = "Дендрограмма иерархической кластеризации centroid",
+     xlab = "Объекты", ylab = "Расстояние")
+
+rect.hclust(hc, k = 4, border = "green")
+```
+
+
+# Похож на centroid, но использует медиану вместо среднего
+Более устойчив к выбросам чем centroid
+```{r}
+hc <- hclust(dist_matrix, method = "median")
+
+plot(hc, labels=FALSE, main = "Дендрограмма иерархической кластеризации median",
+     xlab = "Объекты", ylab = "Расстояние")
+
+rect.hclust(hc, k = 4, border = "green")
+```
+
+
+
+
+
+
+
+

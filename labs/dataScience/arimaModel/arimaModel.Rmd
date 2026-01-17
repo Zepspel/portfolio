@@ -1,0 +1,201 @@
+---
+title: "Arima model"
+author: "Шацких П.О."
+date: "2025-12-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+table <- read.table("https://hyper.mephi.ru/assets/courseware/v1/63356502d843170fc9f9a568c617f11d/asset-v1:MEPhIx+CS712DS+2025Fall+type@asset+block/jj.dat")
+
+summary(table)
+class(table)
+
+head(table)
+```
+
+## Create time series object
+```{r}
+ts_table <- ts(table)
+class(table)
+```
+
+
+## a.      After obtaining a copy of the dataset, plot the quarterly EPS vs. time.  Describe any patterns that you observe.
+
+```{r}
+plot(ts_table,     
+     main="EPS vs time",
+     xlab="time",
+     ylab="EPS")
+
+```
+
+## b.      In order to perform an ARIMA model, the time series will need to be transformed to remove any trend.  Plot the difference of xt and xt-1, for all t > 0.   Has this difference adequately detrended the series? Does the variability of the EPS appear constant over time?  Why does the constant variance matter?
+```{r}
+d1 <- diff(ts_table)
+print(d1)
+
+class(d1)
+
+plot(d1,     
+     main="EPS difference vs time",
+     xlab="time",
+     ylab="EPS difference")
+
+
+d2 <- diff(d1)
+plot(d2,     
+     main="EPS difference 2 vs time",
+     xlab="time",
+     ylab="EPS difference 2")
+```
+
+
+## c.       Plot the log10 of the quarterly EPS vs. time and plot the difference of log10(xt ) and log10(xt-1) for all t > 0.  Has this adequately detrended the series?  Has the variability of the differenced log10(EPS) become more constant? 
+```{r}
+plot(log(ts_table),     
+     main="log(EPS) vs time",
+     xlab="time",
+     ylab="log(EPS)")
+
+
+
+d3 <- diff(log(ts_table))
+plot(d3,     
+     main="log(EPS) difference vs time",
+     xlab="time",
+     ylab="log(EPS) difference")
+```
+
+ряд не совсем стационарный. так как станционарный ряд в данном случае должен колеблаться вокруг среднего значения и ACF быстро уменьшается до нуля 
+
+## d.      Treating the differenced log10 of the EPS series as a stationary series, plot the ACF and PACF of this series.  What possible ARIMA models would you consider and why?
+```{r}
+acf(d3)
+
+pacf(d3)
+```
+
+
+## e.      Run the proposed ARIMA models from part d and compare the results.  Identify an appropriate model.  Justify your choice.  
+
+## Hint: The Akaike Information Criterion  (AIC) can be used to compare the models. 
+
+AIC сравнивает модели по принципу:  
+хорошее качество + штраф за сложность 
+AIC = 2k - 2ln(L)  
+чем меньше, тем лучше  
+k — число параметров модели  
+L — максимум правдоподобия
+```{r}
+fit1 <- arima(d3, c(1,1,0))
+fit2 <- arima(d3, c(1,1,1))
+fit3 <- arima(d3, c(2,1,1))
+
+library(forecast)
+fit4 <- auto.arima(d3)
+
+fit5 <- arima(d3, c(4,0,3), method="ML")
+
+fit6 <- arima(log(ts_table), c(4,1,3), method="ML") #чтобы предсказывало не разности, а значения
+
+AIC(fit1, fit2, fit3, fit4, fit5, fit6)
+```
+## Предскажем следующие значения
+```{r}
+
+
+fcast <- forecast(fit6, h = 40)  # h - сколько шагов вперед
+
+plot(10^fcast$mean)
+
+10^fcast$mean # предсказанные значения
+
+# объединяем исторические данные и прогноз
+full_series <- c(ts_table, exp(fcast$mean))
+
+# создаём вектор времени для всего ряда
+time <- 1:(length(ts_table) + length(fcast$mean))
+
+# строим график
+plot(time, full_series, type="l", col="blue",
+     xlab="Time", ylab="EPS", main="Historical + Forecast")
+abline(v=length(d3), col="red", lty=2)  # отделяем прогноз вертикальной линией
+```
+
+
+
+## 4.9        (Time Series)  Why is the choice of natural log or log base 10 in Problem 4.8 somewhat irrelevant to the transformation and the analysis?
+
+потому что логарифмы с разным основанием отличаются лишь постоянным делителем  
+
+log10(x) = log(x)/log(10)
+
+##4.10    (Time Series)  Why is the value of the ACF for lag 0 equal to one?
+потому что для лага 0 это корреляция величины самой с собой, а это дисперсия
+в знаменателе у формулы ACF тоже будет стоять дисперсия -> 1
+
+## Посмотрим на графики ARIMA
+```{r}
+sim <- arima.sim(n = 5, list(ar = c(0.9, -0.5, .2, -.3)))
+plot(sim)
+
+sim <- arima.sim(n = 1000, list(ar = c(1, -0.5)))
+plot(sim)
+```
+
+## 4.11    (Time Series) Using arima.sim in R, simulate 10,000 points for AR(p) p = 1,2,3,4  
+## Plot the simulated series, ACF and PACF.  What pattern emerges between p and the plots? 
+
+для выбора p, которое отвечает за кол-во AR членов используем PACF  
+здесь оно резко падает в 0
+
+```{r}
+sim4 <- arima.sim(n = 10000, list(ar = c(0.9, -0.5, .2, -.3)))
+
+sim3 <- arima.sim(n = 10000, list(ar = c(0.9, -0.5, .2)))
+
+sim2 <- arima.sim(n = 10000, list(ar = c(0.9, -0.5)))
+
+sim1 <- arima.sim(n = 10000, list(ar = c(0.9)))
+
+
+sims <- list(sim1, sim2, sim3, sim4)
+
+for (i in seq_along(sims)) {
+  plot(sims[[i]], type="l", main=paste("Simulated AR series, sim =", i))
+  acf(sims[[i]], main=paste("ACF", i))
+  pacf(sims[[i]], main=paste("PACF", i))
+}
+
+
+
+```
+
+
+## 4.12    (Time Series)  Using arima.sim in R, simulate 10,000 points for MA(p) p = 1,2,3,4.  
+## Plot the simulated series, ACF and PACF.  What pattern emerges between p and the plots?
+
+для выбора q, которое отвечает за кол-во MA членов используем ACF  
+здесь оно резко падает в 0
+```{r}
+sim4 <- arima.sim(n = 10000, list( ma = c(-1.9, 1.7, -1.5, 1.5)))
+sim3 <- arima.sim(n = 10000, list( ma = c(-1.9, 1.7, -1.5)))
+sim2 <- arima.sim(n = 10000, list( ma = c(-1.9, 1.7)))
+sim1 <- arima.sim(n = 10000, list( ma = c(-1.9)))
+
+sims <- list(sim1, sim2, sim3, sim4)
+
+for (i in seq_along(sims)) {
+  plot(sims[[i]], type="l", main=paste("Simulated MA series, sim =", i))
+  acf(sims[[i]], main=paste("ACF", i))
+  pacf(sims[[i]], main=paste("PACF", i))
+}
+```
+

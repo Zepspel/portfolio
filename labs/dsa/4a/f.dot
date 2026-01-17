@@ -1,0 +1,18 @@
+digraph BinaryTree {
+    node [shape=box];
+	"94 v1";
+	"94 v1" -> "55 v1";
+	"55 v1" -> "42 v1";
+	"55 v1" -> "76 v1";
+	"76 v1" -> "60 v1";
+	"60 v1" -> "67 v1";
+	"76 v1" -> "89 v1";
+	"94 v1" -> "95 v1";
+	"95 v1" -> "94 v1" [color="red", constraint=false];
+	"94 v1" -> "89 v1" [color="red", constraint=false];
+	"89 v1" -> "76 v1" [color="red", constraint=false];
+	"76 v1" -> "67 v1" [color="red", constraint=false];
+	"67 v1" -> "60 v1" [color="red", constraint=false];
+	"60 v1" -> "55 v1" [color="red", constraint=false];
+	"55 v1" -> "42 v1" [color="red", constraint=false];
+}

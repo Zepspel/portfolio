@@ -1,0 +1,16 @@
+digraph BinaryTree {
+    node [shape=box];
+	"37 qty 1";
+	"37 qty 1" -> "12 qty 1";
+	"12 qty 1" -> "5 qty 1";
+	"5 qty 1" -> "4 qty 1";
+	"5 qty 1" -> "7 qty 1";
+	"12 qty 1" -> "22 qty 1";
+	"22 qty 1" -> "19 qty 1";
+	"19 qty 1" -> "14 qty 1";
+	"22 qty 1" -> "28 qty 1";
+	"37 qty 1" -> "91 qty 1";
+	"91 qty 1" -> "81 qty 1";
+	"81 qty 1" -> "89 qty 1";
+	"91 qty 1" -> "95 qty 1";
+}

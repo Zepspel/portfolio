@@ -1,0 +1,124 @@
+
+---
+title: "Naive Bayes"
+author: "Шацких П.О."
+date: "2025-11-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(e1071)
+library(dplyr)
+library(caret)
+library(knitr)
+```
+
+# Load Data
+
+```{r}
+data <- read.csv("https://hyper.mephi.ru/assets/courseware/v1/66b19c28d0c9940f359aa6da5ad25a3b/asset-v1:MEPhIx+CS712DS+2025Fall+type@asset+block/nbtrain.csv")
+train <- data[1:9010, ]
+test  <- data[9011:10010, ]
+```
+
+# 4.5        (Naïve Bayes)  In this assignment you will train a Naïve Bayes classifier on categorical data and predict individuals’ incomes.  Import the nbtrain.csv file.  Use the first 9010 records as training data and the remaining 1000 records as testing data.
+
+## a.      Construct the Naïve Bayes classifier from the training data, according to the formula “income ~ age + sex + educ”.  To do this, use the “naiveBayes” function from the “e1071” package.  Provide the model’s a priori and conditional probabilities.
+
+```{r}
+model_45 <- naiveBayes(income ~ age + sex + educ, data=train)
+model_45
+```
+
+## b.      Score the model with the testing data and create the model’s confusion matrix.  Also, calculate the overall, 10-50K, 50-80K, and GT 80K misclassification rates. Explain the variation in the model’s predictive power across income classes.
+
+```{r}
+pred_45 <- predict(model_45, newdata=test)
+test$income <- factor(test$income)
+cm_45 <- confusionMatrix(pred_45, test$income)
+cm_45
+
+overall_mis <- 1 - sum(pred_45 == test$income)/nrow(test)
+
+by_class <- test %>% mutate(pred = pred_45) %>%
+  group_by(income) %>%
+  summarise(mis = mean(pred != income))
+
+overall_mis
+kable(by_class)
+```
+
+
+
+# 4.6        (Naïve Bayes)  As in assignment 4.5, import the nbtrain.csv file.  Use the first 9010 records as training data and the remaining 1000 records as testing data.
+
+## a.      Construct the classifier according to the formula “sex ~ age + educ + income”, and calculate the overall, female, and male misclassification rates.  Explain the misclassification rates?
+
+```{r}
+model_46 <- naiveBayes(sex ~ age + educ + income, data=train)
+pred_46 <- predict(model_46, newdata=test)
+
+overall_mis_46 <- mean(pred_46 != test$sex)
+
+by_sex <- test %>% mutate(pred = pred_46) %>%
+  group_by(sex) %>%
+  summarise(mis = mean(pred != sex))
+
+overall_mis_46
+kable(by_sex)
+```
+
+
+## b.      Divide the training data into two partitions, according to sex, and randomly select 3500 records from each partition.  Reconstruct the model from part (a) from these 7000 records.  Provide the model’s a priori and conditional probabilities.
+
+```{r}
+set.seed(1)
+
+
+
+train_f <- train %>% filter(sex == "F") %>% sample_n(3500)
+train_m <- train %>% filter(sex == "M") %>% sample_n(3500)
+
+train_bal <- rbind(train_f, train_m)
+
+model_46_bal <- naiveBayes(sex ~ age + educ + income, data=train_bal)
+model_46_bal
+```
+
+---
+
+## c.       How well does the model classify the testing data?  Explain why.
+
+```{r}
+test$sex <- factor(test$sex)
+levels(test$sex)
+pred_bal <- predict(model_46_bal, test)
+cm_bal <- confusionMatrix(pred_bal, test$sex)
+cm_bal
+```
+
+Explanation:  
+Balanced training helps avoid prior bias and may improve fairness, but also reduces sample size → may lower accuracy.
+
+---
+
+## d.      Repeat step (b) 4 several times.  What effect does the random selection of records have on the model’s performance?
+
+```{r}
+results <- c()
+
+for (i in 1:4) {
+  set.seed(i)
+  f <- train %>% filter(sex == "F") %>% sample_n(3500)
+  m <- train %>% filter(sex == "M") %>% sample_n(3500)
+  bal <- rbind(f, m)
+
+  mdl <- naiveBayes(sex ~ age + educ + income, data=bal)
+  pr  <- predict(mdl, test)
+  results[i] <- mean(pr != test$sex)
+}
+
+results
+```
+
+

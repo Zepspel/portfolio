@@ -1,0 +1,339 @@
+---
+title: "Association rules"
+author: "Шацких П.О."
+date: "2025-11-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# loading dataset
+```{r}
+table <- read.table("https://hyper.mephi.ru/assets/courseware/v1/4528e593d5d574a075e15cab1da2383b/asset-v1:MEPhIx+CS712DS+2025Fall+type@asset+block/AssociationRules.csv",
+                 fill=TRUE)
+
+head(table)
+
+summary(table)
+```
+The average length of the transactions is 10 items
+
+
+## categorising
+```{r}
+table <- as.data.frame(lapply(table, as.factor))
+
+summary(table)
+```
+
+
+## a. Determine the most frequent item bought in the store.
+Given a list structure x, unlist simplifies it to produce a vector which contains all the atomic components which occur in x.
+```{r}
+all_factors <- unlist(table)
+
+class(all_factors)
+all_factors <- table(all_factors)
+
+
+top_freq <- sort(all_factors, decreasing = TRUE)
+head(top_freq, 10)
+
+```
+# The most frequent item
+```{r}
+print(top_freq[2])
+
+```
+
+# b. How many items were bought in the largest transaction?
+```{r}
+ncol(table)
+any(!is.na(table$V14))
+cat("max 14 items were bought\n")
+
+```
+
+```{r include=FALSE}
+library(arules)
+library(arulesViz)
+```
+
+
+
+
+# Mine the Association rules with a minimum Support of 1% and a minimum Confidence of 0%.
+fill "" wirh NA for apriori algorithm missing it
+```{r}
+#table[table == ""] <- NA
+```
+
+create lists of items for independence of set from oreder
+```{r}
+trans_list <- list()
+
+for(i in 1:nrow(table)) {
+  items <- unlist(table[i, ])
+  items <- items[!is.na(items) & items != ""]
+  
+  trans_list[[i]] <- as.character(items)
+}
+
+head(trans_list)
+```
+
+```{r, results='hide'}
+rules <- apriori(table, 
+                 parameter = list(support = 0.01,  # 1% minimum support
+                                  confidence = 0,   # 0% minimum confidence
+                                  minlen = 3))       # minimum 1 item in rule
+                                  #maxlen = 2))     # maximum 10 items in rule
+
+rules_sorted <- sort(rules, by = "support")
+```
+
+```{r}
+inspect(head(rules))
+```
+
+parameter	
+object of class APparameter or named list. The default behavior is to mine rules with minimum support of 0.1, minimum confidence of 0.8, maximum of 10 items (maxlen), and a maximal time for subset checking of 5 seconds (maxtime).
+```{r, results='hide'}
+rules <- apriori(trans_list, 
+                 parameter = list(support = 0.01,  # 1% minimum support
+                                  confidence = 0))   # 0% minimum confidence
+                                  #minlen = 2,       # minimum 1 item in rule
+                                  #maxlen = 2))     # maximum 10 items in rule
+
+rules_sorted <- sort(rules, by = "support")
+```
+
+```{r}
+inspect(head(rules_sorted))
+```
+
+# c. How many rules appear in the data? 
+```{r}
+length(rules)
+```
+
+# d. How many rules are observed when the minimum confidence is 50%.
+```{r, results='hide'}
+rules <- apriori(trans_list, 
+                 parameter = list(support = 0.01,  # 1% minimum support
+                                  confidence = 0.5))   # 0% minimum confidence
+                                  #minlen = 2,       # minimum 1 item in rule
+                                  #maxlen = 2))     # maximum 10 items in rule
+
+rules_sorted <- sort(rules, by = "support")
+```
+
+
+```{r}
+inspect(head(rules_sorted))
+rules
+```
+
+# e. Explain how the specified confidence impacts the number of rules.
+Confidence(A -> B) = Support(A ∪ B) / Support(A)
+
+если support(A) был большим, но когда мы добавили B, то резко упал, то Confidence(A->B) --> 0
+очевидно, что при добавлении новых элементов в множество их частота (support) будет падать,
+и чем выше мы ставим Confidence тем более строго мы требуем, чтобы support почти не упал
+Следовательно уменьшаем количество подходящих нам правил
+
+
+# Create a scatter plot comparing the parameters support and confidence on the axis, and lift with shading.  
+Lift(A -> B) = Confidence(A -> B) / Support(B)
+```{r}
+library(ggplot2)
+
+rules_sorted_lift <- sort(rules, by = "lift")
+inspect(head(rules_sorted_lift))
+rules_df <- as(rules_sorted_lift, "data.frame")
+head(rules_df)
+
+ggplot(rules_df, aes(x = support, y = confidence, color = lift)) +
+  geom_point(alpha = 0.7, size = 2) +
+  scale_color_gradient(low = "yellow", high = "black", name = "Lift") +
+  labs(title = "Association Rules: Support vs Confidence",
+       x = "Support",
+       y = "Confidence")
+```
+
+
+# Compare support and lift.  
+
+## g. Create a scatter plot measuring support vs. lift; record your observations. 
+```{r}
+ggplot(rules_df, aes(x = support, y = lift, color=confidence)) +
+  geom_point(alpha = 0.7, size = 2) +
+  scale_color_gradient(low = "yellow", high = "black", name = "Confidence") +
+  labs(title = "Association Rules: Support vs Lift",
+       x = "Support",
+       y = "Lift")
+```
+
+# h. Where are the rules located that would be considered interesting and useful? 
+Most Interesting Rules Location:
+
+1. Top-Right Quadrant:
+
+High Support + High Lift
+
+Rules that are both frequent and strong
+
+Most valuable for business decisions
+
+2. Top-Left Quadrant:
+
+Low Support + High Lift
+
+Rare but very strong associations
+
+Good for niche marketing or special cases
+
+3. Bottom-Right Quadrant:
+
+High Support + Low Lift
+
+Common but weak associations
+
+May represent obvious or trivial relationships
+
+
+## j. Using the interaction tool for a scatter plot, identify 3 rules that appear in at least 10% of the transactions by coincidence. 
+```{r}
+ggplot(rules_df, aes(x = support, y = lift)) +
+  geom_point(alpha = 0.7, size = 2) +
+  annotate("rect", 
+           xmin = 0.1, xmax = max(rules_df$support),
+           ymin = min(rules_df$lift), ymax = 1.5,
+           fill = NA, color = "red", linetype = "dashed", linewidth = 1) +
+  labs(title = "Association Rules: Support vs Lift",
+       x = "Support",
+       y = "Lift")
+```
+
+
+
+# Identify the most interesting rules by extracting the rules in which the Confidence is >0.8.   Observe the output of the data table for the most interesting rules. 
+
+## k. Sort the rules stating the highest lift first. 
+```{r, results='hide'}
+rules <- apriori(trans_list, 
+                 parameter = list(support = 0.009,  # 0.9% minimum support
+                                  confidence = 0.8,   # 0% minimum confidence
+                                  minlen = 1))      # minimum 1 item in rule
+                      
+
+rules_sorted <- sort(rules, by = "lift", decreasing = TRUE)
+```
+
+
+```{r}
+inspect(head(rules_sorted))
+length(rules)
+```
+
+##  Provide the 10 rules with the lowest lift. Do they appear to be coincidental?  Why or why not?
+```{r}
+inspect(tail(rules_sorted, 10))
+```
+
+## Create a Graph-based visualization with items and rules as vertices.
+```{r}
+plot(rules, method = "graph")
+
+inspect(rules_sorted)
+
+plot(rules_sorted, method = "graph", engine = "htmlwidget")
+
+```
+
+plot(rules_sorted, method = "graph",
+     engine = "htmlwidget", # Создает интерактивный граф в Viewer RStudio
+     max = 100,             # Максимальное количество отображаемых ребер (связей)
+     # Настройка внешнего вида:
+     nodeCol = "red",       # Цвет вершин-товаров (по умолчанию серый)
+     edgeCol = "grey",      # Цвет ребер
+     # Что кодировать размером и цветом вершин:
+     shading = "lift",      # Цвет вершины зависит от лифта (по умолчанию)
+     measure = "lift",      # Размер вершины зависит от лифта
+     alpha = 0.6              # Прозрачность (1 - непрозрачно, 0 - прозрачно)
+)
+
+
+#  Create a Matrix-based visualization of two measures with colored squares.  The two measures should compare confidence and lift (have recorded = FALSE).  Note that 4 interesting rules stand out on the graph. 
+```{r, results='hide'}
+rules <- apriori(trans_list, 
+                 parameter = list(support = 0.01, 
+                                  confidence = 0.5,   
+                                  minlen = 1))     
+```
+
+```{r}
+length(rules)
+rules_df <- as(rules, "data.frame")
+
+ggplot(rules_df, aes(x = confidence, y = lift)) +
+  geom_bin2d(bins = 20) + 
+  scale_fill_viridis_c(option = "plasma", name = "Count of Rules") +
+  labs(title = "Matrix Visualization: Confidence vs Lift",
+       subtitle = "Colored squares show density of rules",
+       x = "Confidence",
+       y = "Lift") 
+```
+
+
+#   Create a training set from the first 8,000 transactions. Create a testing set from the last 2,000 transactions.  Run the algorithm on each dataset.  Compare the results.
+
+# q. Justify that the relationships we see are not just an artifact of the data we started with.
+
+# r. Can we conclude that the association rules we found are actually true in the population we are studying?
+```{r, results='hide'}
+training_set <- table[1:8000,]
+
+# Тестовая выборка: последние 2,000 транзакций  
+testing_set <- table[8001:10000,]
+
+
+rules_train <- apriori(training_set, 
+                      parameter = list(support = 0.01, confidence = 0.7))
+
+# На тестовой выборке
+rules_test <- apriori(testing_set,
+                     parameter = list(support = 0.01, confidence = 0.7))
+```
+
+```{r}
+
+length(rules_train)
+length(rules_test)
+
+summary(rules_train)
+summary(rules_test)
+
+
+rules_train_sorted <- sort(rules_train, by = "lift", decreasing = TRUE)
+rules_test_sorted <- sort(rules_test, by = "lift", decreasing = TRUE)
+
+
+
+
+inspect(head(rules_train_sorted))
+inspect(head(rules_test_sorted))
+```
+
+
+## Create a Graph-based visualization with items and rules as vertices.
+```{r}
+plot(rules_test, method = "graph") 
+```
+
+
+
+
