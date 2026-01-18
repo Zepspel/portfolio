@@ -10,8 +10,8 @@ I enjoy programming and designing complex technical models and services.
 ## 🛠 Skills
 **Languages:** C, C++, Python, R  
 **Concepts:** OOP, Data Structures, Algorithms, Multithreading, MVC, Design Patterns, Linux core  
-**Libraries/Frameworks:** e1071, rpart, Catch2, pandas, numpy, scikit-learn, matplotlib  
-**Tools:** Git, Linux, VS Code, RStudio
+**Libraries/Frameworks:** e1071, rpart, Catch2, pandas, numpy, scikit-learn, matplotlib, cuda, dask, polars, triton  
+**Tools:** Git, Ubuntu, Clion, PyCharm, RStudio
 
 ## 🎯 Goals
 - Explore advanced ML models and AI pipelines  
